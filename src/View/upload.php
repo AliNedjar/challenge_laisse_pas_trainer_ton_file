@@ -1,23 +1,31 @@
 <?php
 
-if (!empty($_FILES['file']['name'])) {
-    if ($_FILES['file']['size'] < 1000000) {
-        $mime = ['image/jpeg', 'image/png', 'image/gif'];
-        if (in_array($_FILES['file']['type'], $mime)) {
-            $uploadDir = __DIR__ . '/public/uploads';
-            $extension = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-            $filename = uniqid() . '.' .$extension;
-            $uploadFile = $uploadDir . basename($filename);
-            move_uploaded_file($_FILES['file']['tmp_name'], $uploadFile);
-        } else {
-            echo "Erreur ! Type invalide.";
+$filesDesciption = new FilesystemIterator('../../public/uploads/', FilesystemIterator::KEY_AS_FILENAME);
+
+if (!isset($_POST['submit'])) {
+    $errors = [];
+    $mime = ['image/jpeg', 'image/png', 'image/gif'];
+
+    if ($_FILES['file']['size'] > 1000000) {
+        $errors[] = "Erreur! Fichier(s) trop volumineux.";
+    }
+
+    if (!in_array($_FILES['file']['type'], $mime)) {
+        $errors[] = "Erreur! Type de fichier(s) invalide.";
+    }
+
+    if (!empty($errors)) {
+        foreach ($errors as $error) {
+        echo $error;
         }
     } else {
-        echo "Erreur ! Fichier(s) trop volumineux.";
+        $uploadDir = '../../public/uploads/';
+        $extension = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
+        $filename = uniqid() . '.' .$extension;
+        $uploadFile = $uploadDir . basename($filename);
+        move_uploaded_file($_FILES['file']['tmp_name'], $uploadFile);
     }
 }
-
-$filesDesciption = new FilesystemIterator(__DIR__, FilesystemIterator::SKIP_DOTS);
 
 ?>
 
@@ -28,7 +36,7 @@ $filesDesciption = new FilesystemIterator(__DIR__, FilesystemIterator::SKIP_DOTS
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link type="text/css" rel="stylesheet" href="style.css">
+    <link type="text/css" rel="stylesheet" href="../../public/assets/css/style.css">
     <title>Challenge Laisse pas trainer ton file</title>
 </head>
 <body>
@@ -45,9 +53,9 @@ $filesDesciption = new FilesystemIterator(__DIR__, FilesystemIterator::SKIP_DOTS
 foreach ($filesDesciption as $description) {
     $description->getFilename(); ?>
     <figure>
-    <img src="<?= $description->getFilename() ?>" alt="Picture">
+    <img src="<?= "../../public/uploads/" . $description->getFilename() ?>" alt="Picture">
     <p><?= $description->getFilename() ?></P>
-    <button type="reset">Spprimer</button>
+    <button type="reset">Supprimer</button>
     </figure><?php
 } ?>
 </body>
