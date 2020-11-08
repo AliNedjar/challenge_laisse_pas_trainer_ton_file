@@ -2,28 +2,39 @@
 
 $filesDesciption = new FilesystemIterator('../../public/uploads/', FilesystemIterator::KEY_AS_FILENAME);
 
-if (!isset($_POST['submit'])) {
-    $errors = [];
-    $mime = ['image/jpeg', 'image/png', 'image/gif'];
+if($_SERVER["REQUEST_METHOD"] === "POST") {
+    if (!isset($_POST['submit'])) {
+        for ($i = 0; $i < count($_FILES['file']['name']); $i++) {
 
-    if ($_FILES['file']['size'] > 1000000) {
-        $errors[] = "Erreur! Fichier(s) trop volumineux.";
-    }
+            $errors = [];
+            $mime = ['image/jpeg', 'image/png', 'image/gif'];
 
-    if (!in_array($_FILES['file']['type'], $mime)) {
-        $errors[] = "Erreur! Type de fichier(s) invalide.";
-    }
+            if (empty($_FILES['file']['name'][$i])) {
+                $errors[] = "Erreur! Aucun fichier(s) séléctionné.";
+            }
 
-    if (!empty($errors)) {
-        foreach ($errors as $error) {
-        echo $error;
+            if ($_FILES['file']['size'][$i] > 1000000) {
+                $errors[] = "Erreur! Fichier(s) trop volumineux.";
+            }
+
+            if (!in_array($_FILES['file']['type'][$i], $mime)) {
+                $errors[] = "Erreur! Type de fichier(s) invalide.";
+            }
+
+            if (!empty($errors)) { ?>
+                <ul> <?php
+                    foreach ($errors as $error) { ?>
+                        <li><?= $error;?></li> <?php
+                    } ?>
+                </ul> <?php
+            } else {
+                $uploadDir = '../../public/uploads/';
+                $extension = pathinfo($_FILES['file']['name'][$i], PATHINFO_EXTENSION);
+                $filename = uniqid() . '.' . $extension;
+                $uploadFile = $uploadDir . basename($filename);
+                move_uploaded_file($_FILES['file']['tmp_name'][$i], $uploadFile);
+            }
         }
-    } else {
-        $uploadDir = '../../public/uploads/';
-        $extension = pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION);
-        $filename = uniqid() . '.' .$extension;
-        $uploadFile = $uploadDir . basename($filename);
-        move_uploaded_file($_FILES['file']['tmp_name'], $uploadFile);
     }
 }
 
@@ -44,7 +55,7 @@ if (!isset($_POST['submit'])) {
 <form action="" method="post" enctype="multipart/form-data">
     <div>
         <label for="upload">Fichiers à envoyer</label>
-        <input type="file" name="file" id="upload">
+        <input type="file" name="file[]" id="upload" multiple="multiple">
     </div>
     <div>
         <button type="submit">Envoyer !</button>
@@ -53,9 +64,8 @@ if (!isset($_POST['submit'])) {
 foreach ($filesDesciption as $description) {
     $description->getFilename(); ?>
     <figure>
-    <img src="<?= "../../public/uploads/" . $description->getFilename() ?>" alt="Picture">
-    <p><?= $description->getFilename() ?></P>
-    <button type="reset">Supprimer</button>
+        <img src="<?= "../../public/uploads/" . $description->getFilename() ?>" alt="Picture">
+        <p><?= $description->getFilename() ?></P>
     </figure><?php
 } ?>
 </body>
